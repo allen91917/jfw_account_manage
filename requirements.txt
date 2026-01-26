@@ -1,0 +1,13 @@
+# Selenium 和 WebDriver 相關
+selenium>=4.0.0
+webdriver-manager>=4.0.0
+
+# 數據處理和分析
+pandas>=2.0.0
+beautifulsoup4>=4.12.0
+
+# 終端顏色輸出
+colorama>=0.4.6
+
+# HTML 解析器 (beautifulsoup4 的依賴)
+lxml>=4.9.0

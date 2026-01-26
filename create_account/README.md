@@ -1,0 +1,8 @@
+# CreateAccount
+手機管理網址: https://ad.jfw-win.com/#/agent-login 
+pc管理網址: https://agent.jfw-win.com/#/agent-login 
+名稱: 勇2 
+帳號: zx77777 
+密碼: aaaa1111
+現金額度: 30萬
+遊戲網址: https://www.jfw-win.com
