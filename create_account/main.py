@@ -15,7 +15,63 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 # ============================
-# 建立 Chrome Driver（使用 ChromeDriverManager）
+# 安全互動函數
+# ============================
+def safe_click(driver, element, retry=3):
+    """安全點擊元素，支援重試和 JavaScript 備用方案"""
+    for attempt in range(retry):
+        try:
+            # 先捲動到元素位置
+            driver.execute_script("arguments[0].scrollIntoView({behavior: 'auto', block: 'center'});", element)
+            time.sleep(0.3)
+            
+            # 等待元素可點擊
+            WebDriverWait(driver, 5).until(lambda d: element.is_displayed() and element.is_enabled())
+            
+            # 嘗試正常點擊
+            element.click()
+            return True
+        except Exception as e:
+            if attempt < retry - 1:
+                print(f"點擊失敗 (嘗試 {attempt + 1}/{retry})，使用 JavaScript 點擊...")
+                try:
+                    driver.execute_script("arguments[0].click();", element)
+                    return True
+                except:
+                    time.sleep(0.5)
+            else:
+                print(f"點擊失敗：{e}")
+                raise
+    return False
+
+
+def safe_send_keys(driver, element, text, retry=3):
+    """安全輸入文字，支援重試"""
+    for attempt in range(retry):
+        try:
+            # 先捲動到元素位置
+            driver.execute_script("arguments[0].scrollIntoView({behavior: 'auto', block: 'center'});", element)
+            time.sleep(0.3)
+            
+            # 等待元素可互動
+            WebDriverWait(driver, 5).until(lambda d: element.is_displayed() and element.is_enabled())
+            
+            # 清空並輸入
+            element.clear()
+            element.send_keys(text)
+            return True
+        except Exception as e:
+            if attempt < retry - 1:
+                print(f"輸入失敗 (嘗試 {attempt + 1}/{retry})，重試中...")
+                time.sleep(0.5)
+            else:
+                print(f"輸入失敗：{e}")
+                raise
+    return False
+
+
+# ============================
+# 建立 Chrome Driver(使用 ChromeDriverManager)
 # ============================
 def create_driver():
     """建立 Selenium ChromeDriver（使用 ChromeDriverManager 自動下載）"""
@@ -251,21 +307,19 @@ def login(driver, account, password):
         # === 3️⃣ 輸入帳號 ===
         print(f"[{account}] 尋找帳號輸入欄位...")
         acc_el = wait.until(EC.presence_of_element_located((By.XPATH, account_xpath)))
-        acc_el.clear()
-        acc_el.send_keys(account)
+        safe_send_keys(driver, acc_el, account)
         # print(f"[{account}] ✔ 已輸入帳號")
 
         # === 4️⃣ 輸入密碼 ===
         pwd_el = wait.until(EC.presence_of_element_located((By.XPATH, password_xpath)))
-        pwd_el.clear()
-        pwd_el.send_keys(password)
+        safe_send_keys(driver, pwd_el, password)
         # print(f"[{account}] ✔ 已輸入密碼")
 
         # print(f"[{account}] 帳密輸入完成！")
 
         # === 5️⃣ 點擊登入按鈕 ===
         login_btn = wait.until(EC.element_to_be_clickable((By.XPATH, login_button_xpath)))
-        login_btn.click()
+        safe_click(driver, login_btn)
 
         # 等待跳轉完成
         time.sleep(4) 
@@ -370,7 +424,7 @@ def create_account(driver, account):
     comfirm_password_input_xpath = "(//input[@type='password' and @placeholder='請輸入' and not(@name)])[1]"
 
     # ⭐ 固定密碼
-    default_password = "aaaa1111"
+    default_password = "Aaaa1111?"
 
     print(f"[{account}] 準備生成隨機帳號...")
 
@@ -379,7 +433,7 @@ def create_account(driver, account):
         ok_btn = driver.find_element(By.XPATH, ok_button_xpath)
         if ok_btn.is_displayed():
             print(f"[{account}] 偵測到彈窗 → 點擊 OK")
-            ok_btn.click()
+            safe_click(driver, ok_btn)
             time.sleep(0.5)
     except:
         pass
@@ -389,7 +443,7 @@ def create_account(driver, account):
     # 改用 switch 開關定位隨機功能
     random_switch_xpath = "//span[text()='隨機']"
     random_switch = wait.until(EC.element_to_be_clickable((By.XPATH, random_switch_xpath)))
-    random_switch.click()
+    safe_click(driver, random_switch)
     # print(f"[{account}] 已點擊隨機開關")
     time.sleep(3)  # 等待帳號生成
 
@@ -409,15 +463,13 @@ def create_account(driver, account):
     password_input = wait.until(
         EC.presence_of_element_located((By.XPATH, password_input_xpath))
     )
-    password_input.clear()
-    password_input.send_keys(default_password)
+    safe_send_keys(driver, password_input, default_password)
     # print(f"[{account}] 已輸入密碼：{default_password}")
 
     comfirm_password_input = wait.until(
         EC.presence_of_element_located((By.XPATH, comfirm_password_input_xpath))
     )
-    comfirm_password_input.clear()
-    comfirm_password_input.send_keys(default_password)
+    safe_send_keys(driver, comfirm_password_input, default_password)
     # print(f"[{account}] 已輸入確認密碼：{default_password}")
 
     # === 5️⃣ 填入暱稱 ===
@@ -429,15 +481,14 @@ def create_account(driver, account):
     )
 
     nickname = generate_random_name()
-    nickname_input.clear()
-    nickname_input.send_keys(nickname)
+    safe_send_keys(driver, nickname_input, nickname)
 
     print(f"[{account}] 已輸入暱稱：{nickname}")
     time.sleep(1)
     
     # === 6️⃣ 點擊下一步 === 
     next1_button = wait.until(EC.element_to_be_clickable((By.XPATH, next1_button_xpath)))
-    next1_button.click()
+    safe_click(driver, next1_button)
     time.sleep(3)  # 等待下一頁加載
 
     # 若要回傳整組資訊，可以這樣：
@@ -470,13 +521,8 @@ def set_credit_limit(driver, account):
         EC.presence_of_element_located((By.XPATH, credit_input_xpath))
     )
 
-    # 讓畫面自動捲到額度欄位
-    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", credit_input)
-    time.sleep(0.5)
-
     # === 2️⃣ 輸入額度 ===
-    credit_input.clear()
-    credit_input.send_keys(limit_value)
+    safe_send_keys(driver, credit_input, limit_value)
     # print(f"[{account}] 已輸入額度：{limit_value}")
 
     time.sleep(0.3)
@@ -485,7 +531,7 @@ def set_credit_limit(driver, account):
     next_button = wait.until(
         EC.element_to_be_clickable((By.XPATH, next2_button_xpath))
     )
-    next_button.click()
+    safe_click(driver, next_button)
 
     # print(f"[{account}] 已按下下一步（Next）")
     time.sleep(3)  # 等待下一頁加載
@@ -511,7 +557,7 @@ def hold_position(driver, account):
     
     # 點擊下一步
     next_btn = wait.until(EC.element_to_be_clickable((By.XPATH, next_btn_xpath)))
-    next_btn.click()
+    safe_click(driver, next_btn)
     # print(f"[{account}] ✔ 已點擊下一步")
     time.sleep(2)
 
@@ -526,7 +572,7 @@ def hold_position(driver, account):
 
     # === 3️⃣ 點擊保存 ===
     save_btn = wait.until(EC.element_to_be_clickable((By.XPATH, save_btn_xpath)))
-    save_btn.click()
+    safe_click(driver, save_btn)
     # print(f"[{account}] ✔ 已點擊保存")
     time.sleep(2)
 
@@ -549,14 +595,14 @@ def risk_control(driver, account):
         # === 1️⃣ 點擊下一步 ===
         next_btn_xpath = "//button[contains(@class, 'el-button') and contains(., '下一步')]"
         next_btn = wait.until(EC.element_to_be_clickable((By.XPATH, next_btn_xpath)))
-        next_btn.click()
+        safe_click(driver, next_btn)
         # print(f"[{account}] ✔ 已點擊下一步")
         time.sleep(3)
         
-        # === 2️⃣ 點擊創建（使用更精確的 XPath，避免點到創建會員）===
+        # === 2️⃣ 點擊創建(使用更精確的 XPath，避免點到創建會員)===
         create_btn_xpath = "//button[contains(@class, 'confirm-btn') and contains(., '創建')]"
         create_btn = wait.until(EC.element_to_be_clickable((By.XPATH, create_btn_xpath)))
-        create_btn.click()
+        safe_click(driver, create_btn)
         # print(f"[{account}] ✔ 已點擊創建")
         time.sleep(5)
         
