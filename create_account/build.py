@@ -13,7 +13,7 @@ def build_exe():
     """使用 PyInstaller 打包成 exe"""
     
     print("=" * 60)
-    print("🚀 開始打包 create_account.py 成 exe")
+    print("\n🚀 開始打包 main.py 成 exe")
     print("=" * 60)
     
     # 確認是否在 Windows 環境
@@ -50,7 +50,7 @@ def build_exe():
         "--name=CreateAccount",         # exe 名稱
         "--clean",                      # 清理暫存檔
         "--noupx",                      # 不使用 UPX 壓縮（避免部分防毒軟體誤判）
-        "create_account.py"
+        "main.py"
     ]
     
     # 如果需要顯示 console（方便看輸出），改用這個 cmd
@@ -61,7 +61,7 @@ def build_exe():
         "--name=CreateAccount",         # exe 名稱
         "--clean",                      # 清理暫存檔
         "--noupx",                      # 不使用 UPX 壓縮
-        "create_account.py"
+        "main.py"
     ]
     
     print("\n📦 開始打包...")
@@ -139,7 +139,7 @@ def main():
     print("\n" + "=" * 60)
     print("🛠️  CreateAccount 打包工具")
     print("=" * 60)
-    print("\n此工具會將 create_account.py 打包成 Windows exe 檔案")
+    print("\n此工具會將 main.py 打包成 Windows exe 檔案")
     print("\n打包選項：")
     print("  1. 包含 console 視窗（可看到執行過程，建議）")
     print("  2. 不含 console 視窗（純 GUI 模式）")
